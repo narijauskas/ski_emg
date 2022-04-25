@@ -5,6 +5,9 @@
 // following example from:
 // http://www.iotsharing.com/2017/06/how-to-use-udpip-with-arduino-esp32.html
 
+const int P1 = 32;
+const int P2 = 33;
+
 // wifi name and password
 const char *ssid = "CenturyLink4932";
 const char *pwd = "5ucmhdkpda8nvv";
@@ -41,12 +44,24 @@ void loop()
 {
     // put your main code here, to run repeatedly:
     // data will be sent to server
-    uint8_t buffer[50] = "hello world";
+    uint16_t v1 = analogRead(P1);
+    uint16_t v2 = analogRead(P2);
+
+    char str[50];
+    sprintf(str, "%d,%d,", v1, v2);
+
+    uint8_t buffer[50];
+    
+    for (int i = 0; i < 50; i++)
+    {
+        buffer[i] = str[i];
+    }
+    
     // This initializes udp and transfer buffer
     udp.beginPacket(udpAddress, udpPort);
     udp.write(buffer, 11);
     udp.endPacket();
-    Serial.println("packet sent");
+    // Serial.println("packet sent");
     memset(buffer, 0, 50);
     // processing incoming packet, must be called before reading the buffer
     udp.parsePacket();
@@ -56,6 +71,6 @@ void loop()
         Serial.print("Server to client: ");
         Serial.println((char *)buffer);
     }
-    // Wait for 1 second
-    delay(1000);
+    // Wait for 0.033 seconds (about 30fps)
+    delay(33);
 }
