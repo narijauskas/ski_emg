@@ -1,30 +1,42 @@
 // #define USB_RAWHID
 #include <Arduino.h>
+// #include <SPI.h>
+#include <SD.h>
 
+#define SERIAL_DEBUG
 #define SERIAL_STREAM
-#define SERIAL_MSG
 // #define SAVE_SD
+
 // the number of EMGs
 #define N 2
 const int EMGPIN[N] = {14,15};
 
-int ix = 0;
+// int ix = 0;
 // const int EMG_2 = 15;
 
 
 void setup()
 {
+    #ifdef SERIAL_DEBUG
     Serial.begin(115200); // Teensy ignores baud rate
+    #endif
+
+    #ifdef SAVE_SD
+    SD.begin(BUILTIN_SDCARD);
+    #endif
 }
 
+
+
+
+
+/* -------------------------- timing control -------------------------- */
 uint32_t current_micros;
 uint32_t prev_micros;
 // uint32_t delay_micros = 10000; //100 Hz
 uint32_t delay_micros = 33333; //30 Hz
 
-
-
-bool check_time(){
+bool time_passed(){
     current_micros = micros();
     if (current_micros - prev_micros >= delay_micros){
         prev_micros = current_micros; // update time
@@ -33,18 +45,25 @@ bool check_time(){
     return false;
 }
 
+/* --------------------------  -------------------------- */
+
+
+
+
+
 bool is_logging = true;
 
 void loop()
 {
-    if (is_logging && check_time()){
+    if (is_logging && time_passed()){
 
         Serial.print(current_micros);
 
         for (int i = 0; i < N; i++)
         {
+            int val = analogRead(EMGPIN[i]);
             Serial.print(",");
-            Serial.print(analogRead(EMGPIN[i]));
+            Serial.print(val);
         }
         Serial.println();
     }
