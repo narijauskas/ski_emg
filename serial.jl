@@ -12,6 +12,9 @@ display(lines(rand(10)))
 function echo(f, portname)
     baudrate = 115200 # teensy ignores baudrate
     LibSerialPort.open(portname, baudrate) do sp
+        # clear buffer
+        read(sp)
+
         try
             while true
                 sleep(0.01)

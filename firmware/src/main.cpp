@@ -4,8 +4,13 @@
 #define SERIAL_STREAM
 #define SERIAL_MSG
 // #define SAVE_SD
+// the number of EMGs
+#define N 2
+const int EMGPIN[N] = {14,15};
 
 int ix = 0;
+// const int EMG_2 = 15;
+
 
 void setup()
 {
@@ -14,8 +19,9 @@ void setup()
 
 uint32_t current_micros;
 uint32_t prev_micros;
-// uint32_t delay_micros = 10; //100 Hz
-uint32_t delay_micros = 33; //30 Hz
+// uint32_t delay_micros = 10000; //100 Hz
+uint32_t delay_micros = 33333; //30 Hz
+
 
 
 bool check_time(){
@@ -27,19 +33,21 @@ bool check_time(){
     return false;
 }
 
+bool is_logging = true;
+
 void loop()
 {
-    
-    if (check_time()){
-        // call "main" function        
-        Serial.print("hello world ");
-        ix++;
-        Serial.println(current_micros);
+    if (is_logging && check_time()){
+
+        Serial.print(current_micros);
+
+        for (int i = 0; i < N; i++)
+        {
+            Serial.print(",");
+            Serial.print(analogRead(EMGPIN[i]));
+        }
+        Serial.println();
     }
-
-
-    // delay(33); // about 30 fps
-
 }
 
 //     // put your main code here, to run repeatedly:
@@ -48,7 +56,6 @@ void loop()
 //     uint16_t v2 = analogRead(P2);
 
 //     char str[50];
-//     sprintf(str, "%d,%d,", v1, v2);
 
 //     uint8_t buffer[50];
     
