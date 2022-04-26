@@ -3,9 +3,22 @@
 // #include <SPI.h>
 #include <SD.h>
 
-#define SERIAL_DEBUG
-#define SERIAL_STREAM
+#define DEBUG_SERIAL
+#define STREAM_SERIAL
 #define SAVE_SD
+
+#ifdef DEBUG_SERIAL
+#ifndef USE_SERIAL
+#define USE_SERIAL
+#endif
+#endif
+
+#ifdef STREAM_SERIAL
+#ifndef USE_SERIAL
+#define USE_SERIAL
+#endif
+#endif
+
 
 // the number of EMGs
 #define N 2
@@ -13,12 +26,9 @@ const int EMG_PIN[N] = {14,15};
 const int LOG_SWITCH = 36;
 const int LOG_LED = 13;
 
-#ifdef SAVE_SD
-#endif
 
 
-
-bool is_logging = false;
+bool is_logging = true;
 bool log_switch_state;
 bool last_log_switch_state;
 char filename[16];
@@ -40,8 +50,11 @@ void setup()
     delay(2000);
 
 
-    #ifdef SERIAL_DEBUG
+    #ifdef USE_SERIAL
     Serial.begin(115200); // Teensy ignores baud rate
+    delay(1000);
+    #endif
+    #ifdef DEBUG_SERIAL
     delay(5000);
     Serial.println("starting up");
     #endif
@@ -53,13 +66,17 @@ void setup()
     sprintf(filename, "data_%d.txt", filenum);
     while (SD.exists(filename))
     {
+        #ifdef DEBUG_SERIAL
         Serial.print("found file: ");
         Serial.println(filename);
+        #endif
         sprintf(filename, "data_%d.txt", filenum++);
     }
+    #ifdef DEBUG_SERIAL
     Serial.println("SD ready");
     Serial.print("next file: ");
     Serial.println(filename);
+    #endif
     #endif
 }
 
@@ -71,7 +88,10 @@ void setup()
 uint32_t current_micros;
 uint32_t prev_micros;
 // uint32_t delay_micros = 10000; //100 Hz
-uint32_t delay_micros = 33333; //30 Hz
+uint32_t delay_micros = 50000; //20 Hz
+// uint32_t delay_micros = 33333; //30 Hz
+// uint32_t delay_micros = 20000; //50 Hz
+
 
 bool time_passed(){
     current_micros = micros();
@@ -104,41 +124,57 @@ void start_logging(){
     is_logging = true;
     digitalWrite(LOG_LED, HIGH);
     sprintf(filename, "data_%d.txt", filenum++);
+    #ifdef DEBUG_SERIAL
     Serial.print("creating file:");
     Serial.println(filename);
+    #endif
+    #ifdef SAVE_SD
     file = SD.open(filename, FILE_WRITE);
     file.println("time,EMG1,EMG2");
     file.close();
+    #endif
 }
 
 void stop_logging(){
     is_logging = false;
     digitalWrite(LOG_LED, LOW);
+    #ifdef DEBUG_SERIAL
     Serial.println("stopped logging to file: ");
     Serial.println(filename);
+    #endif
 }
 
 void loop()
 {
     start_stop_logging();    
     if (is_logging && time_passed()){
-
+        #ifdef STREAM_SERIAL
         Serial.print(current_micros);
+        #endif
+        #ifdef SAVE_SD
         file = SD.open(filename, FILE_WRITE);
         file.print(current_micros);
+        #endif
 
         for (int i = 0; i < N; i++)
         {
             int val = analogRead(EMG_PIN[i]);
+            #ifdef STREAM_SERIAL
             Serial.print(",");
             Serial.print(val);
+            #endif
+            #ifdef SAVE_SD
             file.print(",");
             file.print(val);
+            #endif
         }
-
+        #ifdef STREAM_SERIAL
         Serial.println();
+        #endif
+        #ifdef SAVE_SD
         file.println();
         file.close();
+        #endif
     }
 }
 
