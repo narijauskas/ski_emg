@@ -28,9 +28,9 @@ const int LOG_LED = 13;
 
 
 
-bool is_logging = true;
-bool log_switch_state;
-bool last_log_switch_state;
+bool is_logging = false;
+bool log_switch_state = false;
+bool last_log_switch_state = false;
 char filename[16];
 int filenum = 0;
 File file;
@@ -62,7 +62,8 @@ void setup()
 
     #ifdef SAVE_SD
     SD.begin(BUILTIN_SDCARD);
-    delay(1000);
+    delay(2000);
+    Serial.println("SD ready");
     sprintf(filename, "data_%d.txt", filenum);
     while (SD.exists(filename))
     {
@@ -70,10 +71,9 @@ void setup()
         Serial.print("found file: ");
         Serial.println(filename);
         #endif
-        sprintf(filename, "data_%d.txt", filenum++);
+        sprintf(filename, "data_%d.txt", ++filenum);
     }
     #ifdef DEBUG_SERIAL
-    Serial.println("SD ready");
     Serial.print("next file: ");
     Serial.println(filename);
     #endif
@@ -127,10 +127,16 @@ void start_logging(){
     #ifdef DEBUG_SERIAL
     Serial.print("creating file:");
     Serial.println(filename);
+    // Serial.printf("data_%d.txt", filenum);
     #endif
     #ifdef SAVE_SD
     file = SD.open(filename, FILE_WRITE);
-    file.println("time,EMG1,EMG2");
+    file.println("time");
+    for (int i = 0; i < N; i++)
+    {
+        file.printf(",EMG%d", i);
+    }
+    
     file.close();
     #endif
 }
