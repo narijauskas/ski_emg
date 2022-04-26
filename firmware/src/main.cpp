@@ -9,33 +9,39 @@ int ix = 0;
 
 void setup()
 {
-    // put your setup code here, to run once:
     Serial.begin(115200); // Teensy ignores baud rate
+}
 
-    // Connect to the WiFi network
-    // WiFi.begin(ssid, pwd);
-    // delay(1000);
-    // Serial.println("Attempting WiFi connection.");
+uint32_t current_micros;
+uint32_t prev_micros;
+// uint32_t delay_micros = 10; //100 Hz
+uint32_t delay_micros = 33; //30 Hz
 
-    // Wait for connection
-    // while (WiFi.status() != WL_CONNECTED)
-    // {
-    //     delay(500);
-    //     Serial.print(".");
-    // }
-    // Serial.println("");
-    // Serial.print("Connected to ");
-    // Serial.println(ssid);
-    // Serial.print("IP address: ");
-    // Serial.println(WiFi.localIP());
+
+bool check_time(){
+    current_micros = micros();
+    if (current_micros - prev_micros >= delay_micros){
+        prev_micros = current_micros; // update time
+        return true;
+    }
+    return false;
 }
 
 void loop()
 {
-    Serial.print("hello world ");
-    ix++;
-    Serial.println(ix);
-    delay(33);
+    
+    if (check_time()){
+        // call "main" function        
+        Serial.print("hello world ");
+        ix++;
+        Serial.println(current_micros);
+    }
+
+
+    // delay(33); // about 30 fps
+
+}
+
 //     // put your main code here, to run repeatedly:
 //     // data will be sent to server
 //     uint16_t v1 = analogRead(P1);
@@ -67,4 +73,21 @@ void loop()
 //     }
 //     // Wait for 0.033 seconds (about 30fps)
 //     delay(33);
-}
+// }
+
+
+
+    // // get current time & check if enough has passed to run each callback
+    // uint32_t prev_micros = micros();
+
+
+    // for (int ix = 0; ix < N_CALLBACKS; ix++){
+    //     if (current_micros - callbacks[ix].prev_micros >= callbacks[ix].delay_micros){
+    //         // update time
+    //         // see http://arduino.cc/forum/index.php/topic,124048.msg932592.html#msg932592
+    //         callbacks[ix].prev_micros = current_micros;
+
+    //         // call the pointer to the callback fxn if it's enabled
+    //         if (callbacks[ix].enabled){ (*(callbacks[ix].fxn))(); }
+    //     }
+    // }
