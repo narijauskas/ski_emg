@@ -5,24 +5,61 @@
 
 #define SERIAL_DEBUG
 #define SERIAL_STREAM
-// #define SAVE_SD
+#define SAVE_SD
 
 // the number of EMGs
 #define N 2
-const int EMGPIN[N] = {14,15};
+const int EMG_PIN[N] = {14,15};
+const int LOG_SWITCH = 36;
+const int LOG_LED = 13;
 
-// int ix = 0;
-// const int EMG_2 = 15;
+#ifdef SAVE_SD
+#endif
+
+
+
+bool is_logging = false;
+bool log_switch_state;
+bool last_log_switch_state;
+char filename[16];
+int filenum = 0;
+File file;
+
+void start_logging();
+void stop_logging();
 
 
 void setup()
 {
+    pinMode(LOG_SWITCH, INPUT); // connect pullup resistor, switch float vs ground
+    last_log_switch_state = digitalRead(LOG_SWITCH);
+
+    pinMode(LOG_LED, OUTPUT);
+    digitalWrite(LOG_LED, LOW);
+
+    delay(2000);
+
+
     #ifdef SERIAL_DEBUG
     Serial.begin(115200); // Teensy ignores baud rate
+    delay(5000);
+    Serial.println("starting up");
     #endif
+
 
     #ifdef SAVE_SD
     SD.begin(BUILTIN_SDCARD);
+    delay(1000);
+    sprintf(filename, "data_%d.txt", filenum);
+    while (SD.exists(filename))
+    {
+        Serial.print("found file: ");
+        Serial.println(filename);
+        sprintf(filename, "data_%d.txt", filenum++);
+    }
+    Serial.println("SD ready");
+    Serial.print("next file: ");
+    Serial.println(filename);
     #endif
 }
 
@@ -49,25 +86,64 @@ bool time_passed(){
 
 
 
+void start_stop_logging(){
+    log_switch_state = digitalRead(LOG_SWITCH);
+    if (log_switch_state != last_log_switch_state){
+        if (LOW == log_switch_state){
+            start_logging();
+        } else
+        {
+            stop_logging();
+        }
+    }
+    last_log_switch_state = log_switch_state;
+}
 
+//increment file number and generate new file
+void start_logging(){
+    is_logging = true;
+    digitalWrite(LOG_LED, HIGH);
+    sprintf(filename, "data_%d.txt", filenum++);
+    Serial.print("creating file:");
+    Serial.println(filename);
+    file = SD.open(filename, FILE_WRITE);
+    file.println("time,EMG1,EMG2");
+    file.close();
+}
 
-bool is_logging = true;
+void stop_logging(){
+    is_logging = false;
+    digitalWrite(LOG_LED, LOW);
+    Serial.println("stopped logging to file: ");
+    Serial.println(filename);
+}
 
 void loop()
 {
+    start_stop_logging();    
     if (is_logging && time_passed()){
 
         Serial.print(current_micros);
+        file = SD.open(filename, FILE_WRITE);
+        file.print(current_micros);
 
         for (int i = 0; i < N; i++)
         {
-            int val = analogRead(EMGPIN[i]);
+            int val = analogRead(EMG_PIN[i]);
             Serial.print(",");
             Serial.print(val);
+            file.print(",");
+            file.print(val);
         }
+
         Serial.println();
+        file.println();
+        file.close();
     }
 }
+
+//TODO: start logging
+//TODO: stop logging
 
 //     // put your main code here, to run repeatedly:
 //     // data will be sent to server
