@@ -3,8 +3,8 @@
 // #include <SPI.h>
 #include <SD.h>
 
-#define DEBUG_SERIAL
-#define STREAM_SERIAL
+// #define DEBUG_SERIAL
+// #define STREAM_SERIAL
 #define SAVE_SD
 
 #ifdef DEBUG_SERIAL
@@ -29,8 +29,8 @@ const int LOG_LED = 13;
 
 
 bool is_logging = false;
-bool log_switch_state = false;
-bool last_log_switch_state = false;
+bool log_switch_state;
+bool last_log_switch_state;
 char filename[16];
 int filenum = 0;
 File file;
@@ -42,6 +42,7 @@ void stop_logging();
 void setup()
 {
     pinMode(LOG_SWITCH, INPUT); // connect pullup resistor, switch float vs ground
+    log_switch_state = digitalRead(LOG_SWITCH);
     last_log_switch_state = digitalRead(LOG_SWITCH);
 
     pinMode(LOG_LED, OUTPUT);
@@ -55,15 +56,17 @@ void setup()
     delay(1000);
     #endif
     #ifdef DEBUG_SERIAL
-    delay(5000);
+    delay(2000);
     Serial.println("starting up");
     #endif
 
 
     #ifdef SAVE_SD
     SD.begin(BUILTIN_SDCARD);
-    delay(2000);
+    delay(1000);
+    #ifdef DEBUG_SERIAL
     Serial.println("SD ready");
+    #endif
     sprintf(filename, "data_%d.txt", filenum);
     while (SD.exists(filename))
     {
@@ -87,8 +90,8 @@ void setup()
 /* -------------------------- timing control -------------------------- */
 uint32_t current_micros;
 uint32_t prev_micros;
-// uint32_t delay_micros = 10000; //100 Hz
-uint32_t delay_micros = 50000; //20 Hz
+uint32_t delay_micros = 10000; //100 Hz
+// uint32_t delay_micros = 50000; //20 Hz
 // uint32_t delay_micros = 33333; //30 Hz
 // uint32_t delay_micros = 20000; //50 Hz
 
@@ -115,6 +118,7 @@ void start_stop_logging(){
         {
             stop_logging();
         }
+        delay(10); // prevent bounceback
     }
     last_log_switch_state = log_switch_state;
 }
