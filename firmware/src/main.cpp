@@ -3,6 +3,7 @@
 #include <SPI.h>
 #include <SD.h>
 #include <ICM42688.h>
+#include <Adafruit_GPS.h>
 
 // #define DEBUG_SERIAL
 // #define STREAM_SERIAL
@@ -20,10 +21,14 @@
 #endif
 #endif
 
+// GPS setup
+#define GPSSerial Serial7
+Adafruit_GPS GPS(&GPSSerial);
+#define GPSECHO false
+char gps;
 
 // the number of IMUs
 #define N 5
-const int EMG_PIN[N] = {14,15};
 const int LOG_SWITCH = 36;
 const int LOG_LED = 37;
 const int chipSelect = BUILTIN_SDCARD; 
@@ -102,6 +107,12 @@ void setup()
     Serial.println(filename);
     #endif
     #endif
+
+    //GPS setup
+    GPS.begin(9600);
+    GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
+    GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
+    delay(1000);
 }
 
 // run configuration function for all IMUs
@@ -202,7 +213,7 @@ void loop()
         for (int i = 0; i < N; i++)
         {
             IMUs[i].readSensor();
-            //TODO: read GPS data
+            gps = GPS.read();
         }
 
         // this loop transfers sensor data read above
@@ -222,7 +233,12 @@ void loop()
             Serial.print(","); Serial.print(IMUs[i].getRawAccelX());
             Serial.print(","); Serial.print(IMUs[i].getRawAccelY());
             Serial.print(","); Serial.print(IMUs[i].getRawAccelZ());
-            // TODO: save GPS data
+            Serial.print(","); Serial.print(GPS.latitude,4);
+            Serial.print(","); Serial.print(GPS.longitude,4);
+            Serial.print(","); Serial.print(GPS.speed);
+            Serial.print(","); Serial.print(GPS.angle);
+            Serial.print(","); Serial.print(GPS.altitude);
+            Serial.print(","); Serial.print(GPS.satellites);
             #endif
             #ifdef SAVE_SD
             Serial.print(","); Serial.print(IMUs[i].getRawGyroX());
@@ -231,7 +247,12 @@ void loop()
             Serial.print(","); Serial.print(IMUs[i].getRawAccelX());
             Serial.print(","); Serial.print(IMUs[i].getRawAccelY());
             Serial.print(","); Serial.print(IMUs[i].getRawAccelZ());
-            // TODO: save GPS data
+            Serial.print(","); Serial.print(GPS.latitude,4);
+            Serial.print(","); Serial.print(GPS.longitude,4);
+            Serial.print(","); Serial.print(GPS.speed);
+            Serial.print(","); Serial.print(GPS.angle);
+            Serial.print(","); Serial.print(GPS.altitude);
+            Serial.print(","); Serial.print(GPS.satellites);
             #endif
         }
 
