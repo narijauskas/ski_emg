@@ -1,7 +1,8 @@
 // #define USB_RAWHID
 #include <Arduino.h>
-// #include <SPI.h>
+#include <SPI.h>
 #include <SD.h>
+#include <ICM42688.h>
 
 // #define DEBUG_SERIAL
 // #define STREAM_SERIAL
@@ -20,20 +21,42 @@
 #endif
 
 
-// the number of EMGs
-#define N 2
+// the number of IMUs
+#define N 5
 const int EMG_PIN[N] = {14,15};
 const int LOG_SWITCH = 36;
-const int LOG_LED = 13;
+const int LOG_LED = 37;
+const int chipSelect = BUILTIN_SDCARD; 
 
-
+//designated chip select pins
+const char CS0 = 8;
+const char CS1 = 10;
+const char CS2 = 7;
+const char CS3 = 9;
+const char CS4 = 6;
 
 bool is_logging = false;
 bool log_switch_state;
 bool last_log_switch_state;
 char filename[16];
 int filenum = 0;
+int status; // used to check success of IMU data transfer
 File file;
+
+//each IMU has its own object
+ICM42688 IMUs{(SPI,CS0),
+              (SPI,CS1),
+              (SPI,CS2),
+              (SPI,CS3),
+              (SPI,CS4)};
+
+// accel bias and scale factors
+double accelScale[5][3] = {{2,2,2}, {2,2,2}, {2,2,2}, {2,2,2}, {2,2,2}};
+double accelBias[5][3] = {{-0.82,-0.95,1.36}, 
+                         {-1.16,0.79,0.8}, 
+                         {-0.61,-1.26,-1.34}, 
+                         {0.63,-1.14,0.64},
+                         {-0.77, -0.04, 1.53}};
 
 void start_logging();
 void stop_logging();
@@ -48,15 +71,14 @@ void setup()
     pinMode(LOG_LED, OUTPUT);
     digitalWrite(LOG_LED, LOW);
 
-    delay(2000);
-
+    delay(500);
 
     #ifdef USE_SERIAL
     Serial.begin(115200); // Teensy ignores baud rate
-    delay(1000);
+    delay(500);
     #endif
     #ifdef DEBUG_SERIAL
-    delay(2000);
+    delay(500);
     Serial.println("starting up");
     #endif
 
@@ -83,9 +105,20 @@ void setup()
     #endif
 }
 
-
-
-
+// run configuration function for all IMUs
+void setupIMUs() 
+    {
+    for (i = 0, i < N, i++)
+    {
+        status = IMUs[i].begin()
+        Serial.println("IMU 0 initialization unsuccessful");
+        Serial.println("Check IMU wiring or try cycling power");
+        Serial.print("Status: ");
+        Serial.println(status);
+    while(1) {}
+    }
+    
+}
 
 /* -------------------------- timing control -------------------------- */
 uint32_t current_micros;
@@ -166,18 +199,43 @@ void loop()
         file.print(current_micros);
         #endif
 
+        //this loop reads all sensors only
         for (int i = 0; i < N; i++)
         {
-            int val = analogRead(EMG_PIN[i]);
+            IMUs[i].readSensor;
+            //TODO: read GPS data
+        }
+
+        // this loop transfers sensor data read above
+        // datalogging format:
+// current micros time, already written above
+// IMU0 gyro XYZ ... IMU0 accel XYZ; 
+// ...
+// IMU5 agyro XYZ ... IMU5 accel XYZ;
+// GPS lat, GPS long
+   
+        for (char i = 0; i < N, i++)
+        {
             #ifdef STREAM_SERIAL
-            Serial.print(",");
-            Serial.print(val);
+            Serial.print(","); Serial.print(IMUs[i].getRawGyroX());
+            Serial.print(","); Serial.print(IMUs[i].getRawGyroY());
+            Serial.print(","); Serial.print(IMUs[i].getRawGyroZ());
+            Serial.print(","); Serial.print(IMUs[i].getRawAccelX());
+            Serial.print(","); Serial.print(IMUs[i].getRawAccelY());
+            Serial.print(","); Serial.print(IMUs[i].getRawAccelZ());
+            // TODO: save GPS data
             #endif
             #ifdef SAVE_SD
-            file.print(",");
-            file.print(val);
+            Serial.print(","); Serial.print(IMUs[i].getRawGyroX());
+            Serial.print(","); Serial.print(IMUs[i].getRawGyroY());
+            Serial.print(","); Serial.print(IMUs[i].getRawGyroZ());
+            Serial.print(","); Serial.print(IMUs[i].getRawAccelX());
+            Serial.print(","); Serial.print(IMUs[i].getRawAccelY());
+            Serial.print(","); Serial.print(IMUs[i].getRawAccelZ());
+            // TODO: save GPS data
             #endif
         }
+
         #ifdef STREAM_SERIAL
         Serial.println();
         #endif
