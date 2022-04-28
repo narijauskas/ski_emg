@@ -43,12 +43,11 @@ int filenum = 0;
 int status; // used to check success of IMU data transfer
 File file;
 
-//each IMU has its own object
-ICM42688 IMUs{(SPI,CS0),
-              (SPI,CS1),
-              (SPI,CS2),
-              (SPI,CS3),
-              (SPI,CS4)};
+ICM42688 IMUs[] = {ICM42688(SPI,CS0),
+                   ICM42688(SPI,CS1),
+                   ICM42688(SPI,CS2),
+                   ICM42688(SPI,CS3),
+                   ICM42688(SPI,CS4)};
 
 // accel bias and scale factors
 double accelScale[5][3] = {{2,2,2}, {2,2,2}, {2,2,2}, {2,2,2}, {2,2,2}};
@@ -108,9 +107,9 @@ void setup()
 // run configuration function for all IMUs
 void setupIMUs() 
     {
-    for (i = 0, i < N, i++)
+    for (int i = 0; i < N; i++)
     {
-        status = IMUs[i].begin()
+        status = IMUs[i].begin();
         Serial.println("IMU 0 initialization unsuccessful");
         Serial.println("Check IMU wiring or try cycling power");
         Serial.print("Status: ");
@@ -202,7 +201,7 @@ void loop()
         //this loop reads all sensors only
         for (int i = 0; i < N; i++)
         {
-            IMUs[i].readSensor;
+            IMUs[i].readSensor();
             //TODO: read GPS data
         }
 
@@ -214,7 +213,7 @@ void loop()
 // IMU5 agyro XYZ ... IMU5 accel XYZ;
 // GPS lat, GPS long
    
-        for (char i = 0; i < N, i++)
+        for (int i = 0; i < N; i++)
         {
             #ifdef STREAM_SERIAL
             Serial.print(","); Serial.print(IMUs[i].getRawGyroX());
