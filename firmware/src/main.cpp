@@ -7,7 +7,7 @@
 
 #define DEBUG_SERIAL
 #define STREAM_SERIAL
-//#define SAVE_SD
+#define SAVE_SD
 
 #ifdef DEBUG_SERIAL
 #ifndef USE_SERIAL
@@ -26,6 +26,7 @@
 Adafruit_GPS GPS(&GPSSerial);
 #define GPSECHO false
 char gps;
+const char GPS_ENABLE = 25;
 
 // the number of IMUs
 #define N 5
@@ -54,8 +55,6 @@ ICM42688 IMUs[] = {ICM42688(SPI,CS0),
                    ICM42688(SPI,CS3),
                    ICM42688(SPI,CS4)};
 
-void setupIMUs(); 
-
 // accel bias and scale factors
 double accelScale[5][3] = {{2,2,2}, {2,2,2}, {2,2,2}, {2,2,2}, {2,2,2}};
 double accelBias[5][3] = {{-0.82,-0.95,1.36}, 
@@ -66,6 +65,8 @@ double accelBias[5][3] = {{-0.82,-0.95,1.36},
 
 void start_logging();
 void stop_logging();
+void loadAccelFactors();
+void setupIMUs(); 
 
 
 void setup()
@@ -113,6 +114,7 @@ void setup()
     Serial.println("Trying to initialize IMUs");
     #endif
     setupIMUs();
+    loadAccelFactors();
 
     #ifdef DEBUG_SERIAL
     Serial.println("IMUs succesfully initialized");
@@ -120,9 +122,12 @@ void setup()
     delay(500);
 
     //GPS setup
+    pinMode(GPS_ENABLE, OUTPUT);
+    digitalWrite(GPS_ENABLE, HIGH);
     GPS.begin(9600);
-    GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
+    GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCONLY);
     GPS.sendCommand(PMTK_SET_NMEA_UPDATE_1HZ);
+    GPSSerial.println(PMTK_Q_RELEASE);
     delay(1000);
 }
 
@@ -133,20 +138,29 @@ void setupIMUs()
     {
         status = IMUs[i].begin();
         if (status < 0){
-        Serial.println("IMU " + String(i) + "initialization unsuccessful");
+        Serial.println("IMU " + String(i) + " initialization unsuccessful");
         Serial.println("Check IMU wiring or try cycling power");
         Serial.print("Status: ");
         Serial.println(status);
         while(1) {}
         }
     }
-    
+}
+
+void loadAccelFactors(){
+
+    for (int i = 0; i < N; i++)
+    {
+        IMUs[i].setAccelCalX(accelBias[i][0],accelScale[i][0]);
+        IMUs[i].setAccelCalY(accelBias[i][1],accelScale[i][1]);
+        IMUs[i].setAccelCalZ(accelBias[i][2],accelScale[i][2]);
+    } 
 }
 
 /* -------------------------- timing control -------------------------- */
 uint32_t current_micros;
 uint32_t prev_micros;
-uint32_t delay_micros = 10000; //100 Hz
+uint32_t delay_micros = 1000; //1000 Hz
 // uint32_t delay_micros = 50000; //20 Hz
 // uint32_t delay_micros = 33333; //30 Hz
 // uint32_t delay_micros = 20000; //50 Hz
@@ -191,11 +205,6 @@ void start_logging(){
     #endif
     #ifdef SAVE_SD
     file = SD.open(filename, FILE_WRITE);
-    file.println("time");
-    for (int i = 0; i < N; i++)
-    {
-        file.printf(",EMG%d", i);
-    }
     
     file.close();
     #endif
@@ -227,6 +236,7 @@ void loop()
         {
             IMUs[i].readSensor();
             gps = GPS.read();
+            GPS.parse(GPS.lastNMEA());
         }
 
         // this loop transfers sensor data read above
@@ -240,39 +250,34 @@ void loop()
         for (int i = 0; i < N; i++)
         {
             #ifdef STREAM_SERIAL
-            Serial.print(","); Serial.print(IMUs[i].getRawGyroX());
-            Serial.print(","); Serial.print(IMUs[i].getRawGyroY());
-            Serial.print(","); Serial.print(IMUs[i].getRawGyroZ());
-            Serial.print(","); Serial.print(IMUs[i].getRawAccelX());
-            Serial.print(","); Serial.print(IMUs[i].getRawAccelY());
-            Serial.print(","); Serial.print(IMUs[i].getRawAccelZ());
-            Serial.print(","); Serial.print(GPS.latitude,4);
-            Serial.print(","); Serial.print(GPS.longitude,4);
-            Serial.print(","); Serial.print(GPS.speed);
-            Serial.print(","); Serial.print(GPS.angle);
-            Serial.print(","); Serial.print(GPS.altitude);
-            Serial.print(","); Serial.print(GPS.satellites);
+            Serial.print(","); Serial.print(IMUs[i].getGyroX_rads());
+            Serial.print(","); Serial.print(IMUs[i].getGyroY_rads());
+            Serial.print(","); Serial.print(IMUs[i].getGyroZ_rads());
+            Serial.print(","); Serial.print(IMUs[i].getAccelX_mss());
+            Serial.print(","); Serial.print(IMUs[i].getAccelY_mss());
+            Serial.print(","); Serial.print(IMUs[i].getAccelZ_mss());
+
             #endif
             #ifdef SAVE_SD
-            Serial.print(","); Serial.print(IMUs[i].getRawGyroX());
-            Serial.print(","); Serial.print(IMUs[i].getRawGyroY());
-            Serial.print(","); Serial.print(IMUs[i].getRawGyroZ());
-            Serial.print(","); Serial.print(IMUs[i].getRawAccelX());
-            Serial.print(","); Serial.print(IMUs[i].getRawAccelY());
-            Serial.print(","); Serial.print(IMUs[i].getRawAccelZ());
-            Serial.print(","); Serial.print(GPS.latitude,4);
-            Serial.print(","); Serial.print(GPS.longitude,4);
-            Serial.print(","); Serial.print(GPS.speed);
-            Serial.print(","); Serial.print(GPS.angle);
-            Serial.print(","); Serial.print(GPS.altitude);
-            Serial.print(","); Serial.print(GPS.satellites);
+            file.print(","); file.print(IMUs[i].getGyroX_rads());
+            file.print(","); file.print(IMUs[i].getGyroY_rads());
+            file.print(","); file.print(IMUs[i].getGyroZ_rads());
+            file.print(","); file.print(IMUs[i].getAccelX_mss());
+            file.print(","); file.print(IMUs[i].getAccelY_mss());
+            file.print(","); file.print(IMUs[i].getAccelZ_mss());
             #endif
         }
 
         #ifdef STREAM_SERIAL
+        Serial.print(","); Serial.print(GPS.latitude,4);
+        Serial.print(","); Serial.print(GPS.longitude,4);
+        Serial.print(","); Serial.print(GPS.speed);
         Serial.println();
         #endif
         #ifdef SAVE_SD
+        file.print(","); file.print(GPS.latitude,4);
+        file.print(","); file.print(GPS.longitude,4);
+        file.print(","); file.print(GPS.speed);
         file.println();
         file.close();
         #endif
