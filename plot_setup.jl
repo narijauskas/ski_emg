@@ -15,11 +15,14 @@ clr_mg = parse(RGBAf, "#8E8A73") # mid-ground
 clr_fg = parse(RGBAf, "#000000")
 
 clr = [
-    parse(RGBAf, "#0072BD"), # blue
     parse(RGBAf, "#D95319"), # orange/red
-    parse(RGBAf, "#EDB120"), # yellow
     parse(RGBAf, "#7E2F8E"), # purple
-    parse(RGBAf, "#009E73FF"), # teal
+    parse(RGBAf, "#EDB120"), # yellow
+    parse(RGBAf, "#3d8f57"), # green
+    parse(RGBAf, "#0072BD"), # blue
+    parse(RGBAf, "#000000"), # black/white
+    parse(RGBAf, "#8E8A73") # gray
+    # parse(RGBAf, "#009E73FF"), # teal
 ]
 
 #FUTURE: use update_theme!(), separate for resolutions & colors

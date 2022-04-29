@@ -54,7 +54,7 @@ function trace(portname, n; npoints = 100)
         lines!(ax, obvec)
         return cb
     end
-    ylims!(ax, 0, 1024)
+    ylims!(ax, 0, 1024) 
     display(fig)
 
     echo(portname) do pkt

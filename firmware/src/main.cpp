@@ -1,11 +1,18 @@
 // #define USB_RAWHID
 #include <Arduino.h>
-// #include <SPI.h>
 #include <SD.h>
 
 // #define DEBUG_SERIAL
-// #define STREAM_SERIAL
-#define SAVE_SD
+#define STREAM_SERIAL
+// #define SAVE_SD
+
+
+
+
+
+
+
+
 
 #ifdef DEBUG_SERIAL
 #ifndef USE_SERIAL
@@ -21,10 +28,11 @@
 
 
 // the number of EMGs
-#define N 2
-const int EMG_PIN[N] = {14,15};
+#define N 7
+const int EMG_PIN[N] = {14,15,16,17,18,19,20};
 const int LOG_SWITCH = 36;
-const int LOG_LED = 13;
+const int LOG_LED = 34;
+const int PWR_LED = 13;
 
 
 
@@ -47,6 +55,11 @@ void setup()
 
     pinMode(LOG_LED, OUTPUT);
     digitalWrite(LOG_LED, LOW);
+
+    
+    pinMode(PWR_LED, OUTPUT);
+    digitalWrite(PWR_LED, HIGH);
+
 
     delay(2000);
 
@@ -90,9 +103,10 @@ void setup()
 /* -------------------------- timing control -------------------------- */
 uint32_t current_micros;
 uint32_t prev_micros;
-uint32_t delay_micros = 10000; //100 Hz
+// uint32_t delay_micros = 1000; //1 kHz
+// uint32_t delay_micros = 10000; //100 Hz
 // uint32_t delay_micros = 50000; //20 Hz
-// uint32_t delay_micros = 33333; //30 Hz
+uint32_t delay_micros = 33333; //30 Hz
 // uint32_t delay_micros = 20000; //50 Hz
 
 
@@ -135,11 +149,12 @@ void start_logging(){
     #endif
     #ifdef SAVE_SD
     file = SD.open(filename, FILE_WRITE);
-    file.println("time");
+    file.print("time");
     for (int i = 0; i < N; i++)
     {
-        file.printf(",EMG%d", i);
+        file.printf(",EMG%d", i+1);
     }
+    file.println();
     
     file.close();
     #endif
