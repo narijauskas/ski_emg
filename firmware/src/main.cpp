@@ -3,8 +3,8 @@
 #include <SD.h>
 
 // #define DEBUG_SERIAL
-#define STREAM_SERIAL
-// #define SAVE_SD
+// #define STREAM_SERIAL
+#define SAVE_SD
 
 
 
@@ -52,6 +52,7 @@ void setup()
     pinMode(LOG_SWITCH, INPUT); // connect pullup resistor, switch float vs ground
     log_switch_state = digitalRead(LOG_SWITCH);
     last_log_switch_state = digitalRead(LOG_SWITCH);
+    analogReadResolution(12);
 
     pinMode(LOG_LED, OUTPUT);
     digitalWrite(LOG_LED, LOW);
@@ -103,10 +104,10 @@ void setup()
 /* -------------------------- timing control -------------------------- */
 uint32_t current_micros;
 uint32_t prev_micros;
-// uint32_t delay_micros = 1000; //1 kHz
+uint32_t delay_micros = 1000; //1 kHz
 // uint32_t delay_micros = 10000; //100 Hz
 // uint32_t delay_micros = 50000; //20 Hz
-uint32_t delay_micros = 33333; //30 Hz
+// uint32_t delay_micros = 33333; //30 Hz
 // uint32_t delay_micros = 20000; //50 Hz
 
 
