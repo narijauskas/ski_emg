@@ -5,9 +5,9 @@
 #include <ICM42688.h>
 #include <Adafruit_GPS.h>
 
-// #define DEBUG_SERIAL
-// #define STREAM_SERIAL
-#define SAVE_SD
+#define DEBUG_SERIAL
+#define STREAM_SERIAL
+//#define SAVE_SD
 
 #ifdef DEBUG_SERIAL
 #ifndef USE_SERIAL
@@ -54,6 +54,8 @@ ICM42688 IMUs[] = {ICM42688(SPI,CS0),
                    ICM42688(SPI,CS3),
                    ICM42688(SPI,CS4)};
 
+void setupIMUs(); 
+
 // accel bias and scale factors
 double accelScale[5][3] = {{2,2,2}, {2,2,2}, {2,2,2}, {2,2,2}, {2,2,2}};
 double accelBias[5][3] = {{-0.82,-0.95,1.36}, 
@@ -75,7 +77,6 @@ void setup()
     pinMode(LOG_LED, OUTPUT);
     digitalWrite(LOG_LED, LOW);
 
-    delay(500);
 
     #ifdef USE_SERIAL
     Serial.begin(115200); // Teensy ignores baud rate
@@ -108,6 +109,16 @@ void setup()
     #endif
     #endif
 
+    #ifdef DEBUG_SERIAL
+    Serial.println("Trying to initialize IMUs");
+    #endif
+    setupIMUs();
+
+    #ifdef DEBUG_SERIAL
+    Serial.println("IMUs succesfully initialized");
+    #endif
+    delay(500);
+
     //GPS setup
     GPS.begin(9600);
     GPS.sendCommand(PMTK_SET_NMEA_OUTPUT_RMCGGA);
@@ -121,11 +132,13 @@ void setupIMUs()
     for (int i = 0; i < N; i++)
     {
         status = IMUs[i].begin();
-        Serial.println("IMU 0 initialization unsuccessful");
+        if (status < 0){
+        Serial.println("IMU " + String(i) + "initialization unsuccessful");
         Serial.println("Check IMU wiring or try cycling power");
         Serial.print("Status: ");
         Serial.println(status);
-    while(1) {}
+        while(1) {}
+        }
     }
     
 }
