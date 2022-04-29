@@ -2,8 +2,7 @@ using CSV
 using GLMakie
 
 # data_8:
-# shift weight, 3x calf raise, 3x squat, 3x bend leg, 3x jump
-
+# shift weight, 3x calf raise, 3x squat, 3x bend leg, 3x jumps
 file = CSV.File("data/data_8.txt")
 lines(file.time, file.EMG1)
 lines!(file.time, file.EMG2)
