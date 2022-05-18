@@ -22,24 +22,30 @@
 #endif
 
 // GPS setup
-#define GPSSerial Serial7
+#define GPSSerial Serial5
 Adafruit_GPS GPS(&GPSSerial);
 #define GPSECHO false
 char gps;
-const char GPS_ENABLE = 25;
+const char GPS_ENABLE = 0;
 
 // the number of IMUs
-#define N 5
+#define N 10
 const int LOG_SWITCH = 36;
 const int LOG_LED = 37;
 const int chipSelect = BUILTIN_SDCARD; 
 
 //designated chip select pins
-const char CS0 = 8;
-const char CS1 = 10;
-const char CS2 = 7;
-const char CS3 = 9;
-const char CS4 = 6;
+const byte CS0 = 8;
+const byte CS1 = 24;
+const byte CS2 = 7;
+const byte CS3 = 10;
+const byte CS4 = 6;
+
+const byte CS5 = 41;
+const byte CS6 = 15;
+const byte CS7 = 40;
+const byte CS8 = 14;
+const byte CS9 = 39;
 
 bool is_logging = false;
 bool log_switch_state;
@@ -53,15 +59,27 @@ ICM42688 IMUs[] = {ICM42688(SPI,CS0),
                    ICM42688(SPI,CS1),
                    ICM42688(SPI,CS2),
                    ICM42688(SPI,CS3),
-                   ICM42688(SPI,CS4)};
+                   ICM42688(SPI,CS4),
+                   ICM42688(SPI1,CS5),
+                   ICM42688(SPI1,CS6),
+                   ICM42688(SPI1,CS7),
+                   ICM42688(SPI1,CS8),
+                   ICM42688(SPI1,CS9)};
 
 // accel bias and scale factors
-double accelScale[5][3] = {{2,2,2}, {2,2,2}, {2,2,2}, {2,2,2}, {2,2,2}};
-double accelBias[5][3] = {{-0.82,-0.95,1.36}, 
-                         {-1.16,0.79,0.8}, 
-                         {-0.61,-1.26,-1.34}, 
-                         {0.63,-1.14,0.64},
-                         {-0.77, -0.04, 1.53}};
+double accelScale[10][3] = {{2,2,2}, {2,2,2}, {2,2,2}, {2,2,2}, {2,2,2},
+                           {2,2,2}, {2,2,2}, {2,2,2}, {2,2,2}, {2,2,2}};
+
+double accelBias[10][3] = {{-0.82, -0.95, 1.36}, 
+                          {-1.16,  0.79,  0.8}, 
+                          {-0.61, -1.26,-1.34}, 
+                          { 0.63, -1.14, 0.64},
+                          {-0.77, -0.04, 1.53},
+                          {-0.92,  0.39, 1.63},
+                          { 0.54,  0.96,-0.07},
+                          {-0.75, -1.13, 1.28},
+                          {-1.23,  0.95, 0.25},
+                          {-0.76, -1.26, 1.19},};
 
 void start_logging();
 void stop_logging();
