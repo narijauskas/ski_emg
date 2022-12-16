@@ -1,0 +1,12 @@
+{
+	"folders": [],
+	"settings": {
+		"files.associations": {
+			"string": "cpp",
+			"ostream": "cpp",
+			"iostream": "cpp",
+			"__locale": "cpp",
+			"ios": "cpp"
+		}
+	}
+}
