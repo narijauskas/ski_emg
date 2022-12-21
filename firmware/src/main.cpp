@@ -4,6 +4,7 @@
 #include <SD.h>
 #include <ICM42688.h>
 #include <Adafruit_GPS.h>
+//#include <USBHost_t36.h>
 
 #define DEBUG_SERIAL
 #define STREAM_SERIAL
@@ -35,17 +36,16 @@ const int LOG_LED = 37;
 const int chipSelect = BUILTIN_SDCARD; 
 
 //designated chip select pins
-const byte CS0 = 8;
-const byte CS1 = 24;
-const byte CS2 = 7;
-const byte CS3 = 10;
-const byte CS4 = 6;
-
-const byte CS5 = 41;
-const byte CS6 = 15;
-const byte CS7 = 40;
-const byte CS8 = 14;
-const byte CS9 = 39;
+const char CS0 = 8;
+const char CS1 = 24;
+const char CS2 = 7;
+const char CS3 = 10;
+const char CS4 = 6;
+const char CS5 = 41;
+const char CS6 = 15;
+const char CS7 = 40;
+const char CS8 = 14;
+const char CS9 = 39;
 
 bool is_logging = false;
 bool log_switch_state;
@@ -74,11 +74,11 @@ double accelBias[10][3] = {{-0.82, -0.95, 1.36},
                           {-1.16,  0.79,  0.8}, 
                           {-0.61, -1.26,-1.34}, 
                           { 0.63, -1.14, 0.64},
-                          {-0.77, -0.04, 1.53},
+                          { 0.15, -0.04, 1.53},
                           {-0.92,  0.39, 1.63},
                           { 0.54,  0.96,-0.07},
                           {-0.75, -1.13, 1.28},
-                          {-1.23,  0.95, 0.25},
+                          {-1.23,  -0.95, 0.25},
                           {-0.76, -1.26, 1.19},};
 
 void start_logging();
@@ -96,6 +96,27 @@ void setup()
     pinMode(LOG_LED, OUTPUT);
     digitalWrite(LOG_LED, LOW);
 
+    pinMode(CS0, OUTPUT);
+    pinMode(CS1, OUTPUT);
+    pinMode(CS2, OUTPUT);
+    pinMode(CS3, OUTPUT);
+    pinMode(CS4, OUTPUT);
+    pinMode(CS5, OUTPUT);
+    pinMode(CS6, OUTPUT);
+    pinMode(CS7, OUTPUT);
+    pinMode(CS8, OUTPUT);
+    pinMode(CS9, OUTPUT);
+
+    digitalWrite(CS0, HIGH);
+    digitalWrite(CS1, HIGH);
+    digitalWrite(CS2, HIGH);
+    digitalWrite(CS3, HIGH);
+    digitalWrite(CS4, HIGH);
+    digitalWrite(CS5, HIGH);
+    digitalWrite(CS6, HIGH);
+    digitalWrite(CS7, HIGH);
+    digitalWrite(CS8, HIGH);
+    digitalWrite(CS9, HIGH);
 
     #ifdef USE_SERIAL
     Serial.begin(115200); // Teensy ignores baud rate
@@ -106,10 +127,10 @@ void setup()
     Serial.println("starting up");
     #endif
 
-
     #ifdef SAVE_SD
     SD.begin(BUILTIN_SDCARD);
     delay(1000);
+    file = SD.open(filename, FILE_WRITE);
     #ifdef DEBUG_SERIAL
     Serial.println("SD ready");
     #endif
@@ -131,6 +152,8 @@ void setup()
     #ifdef DEBUG_SERIAL
     Serial.println("Trying to initialize IMUs");
     #endif
+
+    delay(1000);
     setupIMUs();
     loadAccelFactors();
 
@@ -201,10 +224,10 @@ void start_stop_logging(){
     log_switch_state = digitalRead(LOG_SWITCH);
     if (log_switch_state != last_log_switch_state){
         if (LOW == log_switch_state){
-            start_logging();
+            stop_logging();
         } else
         {
-            stop_logging();
+            start_logging();
         }
         delay(10); // prevent bounceback
     }
@@ -223,8 +246,6 @@ void start_logging(){
     #endif
     #ifdef SAVE_SD
     file = SD.open(filename, FILE_WRITE);
-    
-    file.close();
     #endif
 }
 
@@ -234,6 +255,10 @@ void stop_logging(){
     #ifdef DEBUG_SERIAL
     Serial.println("stopped logging to file: ");
     Serial.println(filename);
+    #endif
+
+    #ifdef SAVE_SD
+    file.close();
     #endif
 }
 
@@ -245,7 +270,7 @@ void loop()
         Serial.print(current_micros);
         #endif
         #ifdef SAVE_SD
-        file = SD.open(filename, FILE_WRITE);
+        //file = SD.open(filename, FILE_WRITE);
         file.print(current_micros);
         #endif
 
@@ -253,8 +278,6 @@ void loop()
         for (int i = 0; i < N; i++)
         {
             IMUs[i].readSensor();
-            gps = GPS.read();
-            GPS.parse(GPS.lastNMEA());
         }
 
         // this loop transfers sensor data read above
@@ -285,6 +308,9 @@ void loop()
             file.print(","); file.print(IMUs[i].getAccelZ_mss());
             #endif
         }
+        //read GPS
+        gps = GPS.read();
+        GPS.parse(GPS.lastNMEA());
 
         #ifdef STREAM_SERIAL
         Serial.print(","); Serial.print(GPS.latitude,4);
@@ -297,7 +323,7 @@ void loop()
         file.print(","); file.print(GPS.longitude,4);
         file.print(","); file.print(GPS.speed);
         file.println();
-        file.close();
+        //file.close();
         #endif
     }
 }
