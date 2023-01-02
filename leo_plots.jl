@@ -5,10 +5,10 @@ using GLMakie, CairoMakie
 GLMakie.activate!() # switch plotting backend
 
 # auto-name header, see https://csv.juliadata.org/stable/reading.html#header for more info
-file = CSV.File("data/leo_data_5.txt", header = false) 
+file = CSV.File("leo_data/data_7.txt", header = false) 
 
 # isolate time data
-time = file.Column1
+time = file.Column1./1e6
 
 # explicitly build figure/axis objects
 fig = Figure(); ax = Axis(fig[1,1])
@@ -17,6 +17,8 @@ fig = Figure(); ax = Axis(fig[1,1])
 for name in filter(!isequal(:Column1), file.names)
     lines!(ax, time, file[name])
 end
+# ylims!()
+
 display(current_figure())
 
 

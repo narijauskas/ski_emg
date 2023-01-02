@@ -3,7 +3,8 @@ using GLMakie
 
 # data_8:
 # shift weight, 3x calf raise, 3x squat, 3x bend leg, 3x jumps
-file = CSV.File("data/data_8.txt")
+# data_12 thru data_14
+file = CSV.File("data/data_13.txt")
 lines(file.time, file.EMG1)
 lines!(file.time, file.EMG2)
 lines!(file.time, file.EMG3)
@@ -14,8 +15,8 @@ lines!(file.time, file.EMG7)
 display(current_figure())
 
 
-## save high-quality
-using CairoMakie
-CairoMakie.activate!()
-save("data_8.svg", current_figure())
+# ## save high-quality
+# using CairoMakie
+# CairoMakie.activate!()
+# save("data_8.svg", current_figure())
 

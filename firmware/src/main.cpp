@@ -3,8 +3,8 @@
 #include <SD.h>
 
 // #define DEBUG_SERIAL
-// #define STREAM_SERIAL
-#define SAVE_SD
+#define STREAM_SERIAL
+// #define SAVE_SD
 
 
 
@@ -104,9 +104,9 @@ void setup()
 /* -------------------------- timing control -------------------------- */
 uint32_t current_micros;
 uint32_t prev_micros;
-uint32_t delay_micros = 1000; //1 kHz
+// uint32_t delay_micros = 1000; //1 kHz
 // uint32_t delay_micros = 10000; //100 Hz
-// uint32_t delay_micros = 50000; //20 Hz
+uint32_t delay_micros = 50000; //20 Hz
 // uint32_t delay_micros = 33333; //30 Hz
 // uint32_t delay_micros = 20000; //50 Hz
 
@@ -157,12 +157,13 @@ void start_logging(){
     }
     file.println();
     
-    file.close();
+    // file.close();
     #endif
 }
 
 void stop_logging(){
     is_logging = false;
+    file.close();
     digitalWrite(LOG_LED, LOW);
     #ifdef DEBUG_SERIAL
     Serial.println("stopped logging to file: ");
@@ -178,7 +179,7 @@ void loop()
         Serial.print(current_micros);
         #endif
         #ifdef SAVE_SD
-        file = SD.open(filename, FILE_WRITE);
+        // file = SD.open(filename, FILE_WRITE);
         file.print(current_micros);
         #endif
 
@@ -199,7 +200,7 @@ void loop()
         #endif
         #ifdef SAVE_SD
         file.println();
-        file.close();
+        // file.close();
         #endif
     }
 }

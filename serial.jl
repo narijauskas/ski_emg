@@ -28,7 +28,7 @@ end
 
 echo(portname) = echo(println, portname)
 
-echo(println, "COM4")
+echo(println, "COM6")
 
 
 
