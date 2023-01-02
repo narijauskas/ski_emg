@@ -1,0 +1,13 @@
+{
+	"folders": [
+		{
+			"path": "."
+		},
+		{
+			"path": "firmware"
+		}
+	],
+	"settings": {
+		"julia.persistentSession.alwaysCopy": true
+	}
+}
