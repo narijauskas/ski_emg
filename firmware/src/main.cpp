@@ -8,7 +8,7 @@
 
 #define DEBUG_SERIAL
 #define STREAM_SERIAL
-//#define SAVE_SD
+#define SAVE_SD
 
 #ifdef DEBUG_SERIAL
 #ifndef USE_SERIAL
