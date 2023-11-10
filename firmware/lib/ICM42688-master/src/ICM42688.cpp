@@ -546,7 +546,7 @@ int ICM42688::calibrateGyro() {
   _gyroBD[2] = 0;
   for (size_t i=0; i < _numSamples; i++) {
     readSensor();
-    _gyroBD[0] += (getGyroX_rads() + _gyroB[0])/((double)_numSamples);
+    _gyroBD[0] += (getGyroX_rads() + _gyroB[0])/((double)_numSamples);d
     _gyroBD[1] += (getGyroY_rads() + _gyroB[1])/((double)_numSamples);
     _gyroBD[2] += (getGyroZ_rads() + _gyroB[2])/((double)_numSamples);
     delay(20);
